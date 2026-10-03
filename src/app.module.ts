@@ -23,74 +23,51 @@ import { QueueModule } from '@/queue/queue.module.js';
 
       validationSchema: Joi.object({
         NODE_ENV: Joi.string()
-          .valid(
-            'development',
-            'test',
-            'production',
-          )
+          .valid('development', 'test', 'production')
           .default('development'),
 
         PORT: Joi.number().default(3000),
 
-        DATABASE_URL:
-          Joi.string().required(),
+        DATABASE_URL: Joi.string().required(),
 
         // ========================================================
         // JWT
         // ========================================================
 
-        JWT_ACCESS_SECRET:
-          Joi.string()
-            .min(32)
-            .required(),
+        JWT_ACCESS_SECRET: Joi.string().min(32).required(),
 
-        JWT_ACCESS_EXPIRES_IN:
-          Joi.string().default('15m'),
+        JWT_ACCESS_EXPIRES_IN: Joi.string().default('15m'),
 
-        JWT_REFRESH_SECRET:
-          Joi.string()
-            .min(32)
-            .required(),
+        JWT_REFRESH_SECRET: Joi.string().min(32).required(),
 
-        JWT_REFRESH_EXPIRES_IN:
-          Joi.string().default('7d'),
+        JWT_REFRESH_EXPIRES_IN: Joi.string().default('7d'),
 
         // ========================================================
         // Frontend
         // ========================================================
 
-        FRONTEND_URL:
-          Joi.string()
-            .uri()
-            .required(),
+        FRONTEND_URL: Joi.string().uri().required(),
 
         // ========================================================
         // Cookie
         // ========================================================
 
-        COOKIE_SECURE:
-          Joi.boolean().default(false),
+        COOKIE_SECURE: Joi.boolean().default(false),
 
-        COOKIE_SAME_SITE:
-          Joi.string()
-            .valid(
-              'lax',
-              'strict',
-              'none',
-            )
-            .default('lax'),
+        COOKIE_SAME_SITE: Joi.string()
+          .valid('lax', 'strict', 'none')
+          .default('lax'),
 
         // ========================================================
-        // SendGrid
+        // NodeMailer
         // ========================================================
 
-        SENDGRID_API_KEY:
-          Joi.string().required(),
-
-        EMAIL_FROM:
-          Joi.string()
-            .email()
-            .required(),
+        MAIL_HOST: Joi.string().required(),
+        MAIL_PORT: Joi.string().required(),
+        MAIL_SECURE: Joi.string().required(),
+        MAIL_USER: Joi.string().required(),
+        MAIL_PASS: Joi.string().required(),
+        EMAIL_FROM: Joi.string().required(),
       }),
     }),
 
@@ -100,9 +77,7 @@ import { QueueModule } from '@/queue/queue.module.js';
 
     BullModule.forRoot({
       connection: {
-        url:
-          process.env.REDIS_URL ??
-          'redis://localhost:6379',
+        url: process.env.REDIS_URL ?? 'redis://localhost:6379',
       },
     }),
 
@@ -121,12 +96,8 @@ import { QueueModule } from '@/queue/queue.module.js';
     QueueModule,
   ],
 
-  controllers: [
-    AppController,
-  ],
+  controllers: [AppController],
 
-  providers: [
-    AppService,
-  ],
+  providers: [AppService],
 })
 export class AppModule {}

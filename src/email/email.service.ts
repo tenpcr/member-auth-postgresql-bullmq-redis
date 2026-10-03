@@ -5,7 +5,9 @@ import {
 
 import { ConfigService } from '@nestjs/config';
 
-import sgMail from '@sendgrid/mail';
+import nodemailer, {
+  type Transporter,
+} from 'nodemailer';
 
 import {
   getWelcomeEmailTemplate,
@@ -29,14 +31,37 @@ export class EmailService {
     EmailService.name,
   );
 
+  private readonly transporter: Transporter;
+
   private readonly fromEmail: string;
 
   constructor(
     private readonly config: ConfigService,
   ) {
-    const apiKey =
+    const host =
       this.config.getOrThrow<string>(
-        'SENDGRID_API_KEY',
+        'MAIL_HOST',
+      );
+
+    const port =
+      this.config.getOrThrow<number>(
+        'MAIL_PORT',
+      );
+
+    const user =
+      this.config.getOrThrow<string>(
+        'MAIL_USER',
+      );
+
+    const pass =
+      this.config.getOrThrow<string>(
+        'MAIL_PASS',
+      );
+
+    const secure =
+      this.config.get<boolean>(
+        'MAIL_SECURE',
+        port === 465,
       );
 
     this.fromEmail =
@@ -44,7 +69,16 @@ export class EmailService {
         'EMAIL_FROM',
       );
 
-    sgMail.setApiKey(apiKey);
+    this.transporter =
+      nodemailer.createTransport({
+        host,
+        port,
+        secure,
+        auth: {
+          user,
+          pass,
+        },
+      });
 
     this.logger.log(
       `EmailService initialized: ${this.fromEmail}`,
@@ -134,8 +168,8 @@ export class EmailService {
     );
 
     try {
-      const [response] =
-        await sgMail.send({
+      const info =
+        await this.transporter.sendMail({
           from: this.fromEmail,
           to: params.to,
           subject: params.subject,
@@ -144,18 +178,14 @@ export class EmailService {
         });
 
       this.logger.log(
-        `SendGrid response: ${response.statusCode} -> ${params.to}`,
+        `Email sent: ${info.messageId} -> ${params.to}`,
       );
 
-      return response;
+      return info;
     } catch (error: any) {
       this.logger.error(
-        `SendGrid failed for ${params.to}`,
-        error?.response?.body
-          ? JSON.stringify(
-              error.response.body,
-            )
-          : error?.stack,
+        `Email failed for ${params.to}`,
+        error?.stack ?? error,
       );
 
       throw error;
